@@ -20,55 +20,74 @@ import edu.wpi.first.wpilibj.image.ParticleAnalysisReport;
  */
 public class Camera {
 
+	public static class Direction {
+	
+		public final int value;
+		static final int left_val = 0;
+		static final int right_val = 1;
+		static final int center_val = 2;
+		static final int error_val = -1;
+
+		public static final Direction left = new Direction(left_val);
+		public static final Direction right = new Direction(right_val);
+		public static final Direction center = new Direction(center_val);
+		public static final Direction error = new Direction(error_val);
+
+
+		private Direction (int value) {
+			this.value = value;
+		}
+	}
+	
 	AxisCamera camera;
 	ParticleAnalysisReport[] orderedParticles;
-	ParticleAnalysisReport first;
 	int firstsWidth, pixelCentre, close;
 	AnalogChannel ultraSonic;
 	ParticleAnalysisReport largestParticle;
 	Relay relay;
 	BinaryImage binaryImage;
-
+	
 	public Camera() {
 		camera = AxisCamera.getInstance();
 		camera.writeBrightness(50);
 		relay = new Relay(Config.LIGHTS);
 		relay.setDirection(Relay.Direction.kReverse);
+		
 	}
 
 	public ParticleAnalysisReport[] getLargestParticle(int[] imageValues) {
 		try {
 			relay.set(Relay.Value.kOn);
-			ColorImage colorImage = camera.getImage();
-			relay.set(Relay.Value.kOff);
+			System.out.println("Okay.");
+			ColorImage colorImage = camera.getImage(); 			
+
 			binaryImage = colorImage.thresholdRGB(imageValues[0], imageValues[1], imageValues[2], imageValues[3], imageValues[4], imageValues[5]);
 			colorImage.free();
-			binaryImage = binaryImage.removeSmallObjects(true, 1);
-			binaryImage = binaryImage.convexHull(true);
-
+			//binaryImage = binaryImage.removeSmallObjects(true, 1);
+			//binaryImage = binaryImage.convexHull(true);
 			orderedParticles = binaryImage.getOrderedParticleAnalysisReports();
 			binaryImage.free();
-			largestParticle = orderedParticles[0];
-			System.out.println(largestParticle.center_mass_x);
-			System.out.println(largestParticle.center_mass_y);
 		} catch (AxisCameraException ex) {
 			ex.printStackTrace();
 		} catch (NIVisionException ex) {
-			ex.printStackTrace();
+			System.out.println("ZOMG ERROR " + ex.getMessage());
 		}
-		
+
 		return orderedParticles;
 	}
 
-	public String leftOrRight() {
-		if (largestParticle.center_mass_x < camera.getResolution().width / 2 + 10) {
-			return "right";
-		} else if (largestParticle.center_mass_x > camera.getResolution().width / 2 - 10) {
-			return "left";
-		} else if (largestParticle.center_mass_x >= camera.getResolution().width / 2 + 10 || largestParticle.center_mass_x <= camera.getResolution().width / 2 - 10) {
-			return "centre";
+	public Direction leftOrRight(ParticleAnalysisReport sender) {
+		int camWidth = camera.getResolution().width;
+
+		if (sender.center_mass_x < camWidth / 2 + 10) {
+			return Direction.right;
+		} else if (sender.center_mass_x > camWidth / 2 - 10) {
+			return Direction.left;
+		} else if (sender.center_mass_x >= camWidth / 2 + 10 || sender.center_mass_x <= camWidth / 2 - 10) {
+			return Direction.center;
+		}else {
+			return Direction.error;
 		}
-		return "nil, yo.";
 	}
 
 	public void takePicture(int[] values) {
