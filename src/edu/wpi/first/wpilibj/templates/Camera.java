@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.image.ParticleAnalysisReport;
  *
  * @author mattbettinson
  */
+
 public class Camera {
 
 	public static class Direction {
@@ -52,7 +53,6 @@ public class Camera {
 		camera.writeBrightness(50);
 		relay = new Relay(Config.LIGHTS);
 		relay.setDirection(Relay.Direction.kReverse);
-		
 	}
 
 	public ParticleAnalysisReport[] getLargestParticle(int[] imageValues) {
@@ -63,8 +63,8 @@ public class Camera {
 
 			binaryImage = colorImage.thresholdRGB(imageValues[0], imageValues[1], imageValues[2], imageValues[3], imageValues[4], imageValues[5]);
 			colorImage.free();
-			//binaryImage = binaryImage.removeSmallObjects(true, 1);
-			//binaryImage = binaryImage.convexHull(true);
+			binaryImage = binaryImage.convexHull(false);
+			binaryImage = binaryImage.removeSmallObjects(false, 1);
 			orderedParticles = binaryImage.getOrderedParticleAnalysisReports();
 			binaryImage.free();
 		} catch (AxisCameraException ex) {
@@ -79,11 +79,11 @@ public class Camera {
 	public Direction leftOrRight(ParticleAnalysisReport sender) {
 		int camWidth = camera.getResolution().width;
 
-		if (sender.center_mass_x < camWidth / 2 + 10) {
-			return Direction.right;
-		} else if (sender.center_mass_x > camWidth / 2 - 10) {
+		if (sender.center_mass_x < ((camWidth / 2) - 30)) {
 			return Direction.left;
-		} else if (sender.center_mass_x >= camWidth / 2 + 10 || sender.center_mass_x <= camWidth / 2 - 10) {
+		} else if (sender.center_mass_x > ((camWidth / 2) + 30)) {
+			return Direction.right;
+		} else if (sender.center_mass_x >= ((camWidth / 2) - 30) && sender.center_mass_x <= ((camWidth / 2) + 30)) {
 			return Direction.center;
 		}else {
 			return Direction.error;
@@ -94,6 +94,8 @@ public class Camera {
 		try {
 			ColorImage img = camera.getImage();
 			BinaryImage bin = img.thresholdRGB(values[0], values[1], values[2], values[3], values[4], values[5]);
+			bin = bin.removeSmallObjects(true, 1);
+			bin= bin.convexHull(true);
 			img.free();
 			bin = bin.removeSmallObjects(true, 1);
 			bin = bin.convexHull(true);
@@ -107,6 +109,8 @@ public class Camera {
 		}
 	}
 
+	
+	
 	public void getNormalPicture() {
 		try {
 			ColorImage img = camera.getImage();
