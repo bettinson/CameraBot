@@ -8,6 +8,7 @@ package edu.wpi.first.wpilibj.templates;
  *
  * @author mattbettinson
  */
+ 
 import edu.wpi.first.wpilibj.Jaguar;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.SpeedController;

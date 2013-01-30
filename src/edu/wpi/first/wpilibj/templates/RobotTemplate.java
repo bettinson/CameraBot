@@ -20,10 +20,9 @@ import edu.wpi.first.wpilibj.templates.Camera.Direction;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-
 public class RobotTemplate extends IterativeRobot {
 
-	int sleepForMili = 2;
+	int sleepForMili = 200;
 	Camera cam;
 	boolean bool = false;
 	Bundle leftSide = new Bundle(1, 2);
@@ -31,8 +30,6 @@ public class RobotTemplate extends IterativeRobot {
 	DriverStationLCD station;
 	int[] RGBThreshold = {202, 255, 86, 207, 0, 255};
 	ParticleAnalysisReport[] particles;
-	Direction direction;
-
 	Joystick joystick = new Joystick(1);
 	boolean hasTakenPic = false;
 
@@ -41,68 +38,30 @@ public class RobotTemplate extends IterativeRobot {
 		station = DriverStationLCD.getInstance();
 	}
 
-	/**
+	/*
 	 * This function is called periodically during autonomous
 	 */
-
-	public void testInit()
-	{
+	public void testInit() {
 		cam.relay.set(Relay.Value.kOn);
 	}
 
 	public void testPeriodic() {
-		if (joystick.getTrigger())
-		{
-			particles = cam.getLargestParticle(RGBThreshold);
-			hasTakenPic = true;
-			System.out.println("PICTURE");
+		if (joystick.getTrigger()) {
 		}
-		if (joystick.getRawButton(2))
-		{
-			 direction = cam.leftOrRight(particles[0]);
-			 if (direction == Direction.left) {
-				station.println(DriverStationLCD.Line.kUser1, 1 , "left ");
-				/*
-				rightSide.set(0.2);
-				try {
-					Thread.sleep(sleepForMili);
-				} catch (InterruptedException ex) {
-					ex.printStackTrace();
-				}
-				rightSide.set(0);
-				*/
-
-			} else if (direction == Direction.right) {
-				station.println(DriverStationLCD.Line.kUser1, 1 , "right");
-				/*
-				leftSide.set(0.2);
-				try {
-					Thread.sleep(sleepForMili);
-				} catch (InterruptedException ex) {
-					ex.printStackTrace();
-				}
-				leftSide.set(0);
-				 */
-			} else if (direction == Direction.center) {
-				station.println(DriverStationLCD.Line.kUser1, 1 , "center'");
-				/*
-				System.out.println("YEEEEEE");
-				leftSide.set(0);
-				rightSide.set(0);
-				*/
-			}
-
-		}
-
-		while(hasTakenPic){
+		particles = cam.getLargestParticle(RGBThreshold);
+		if (particles != null && particles.length > 0) {
+			Direction direction = cam.leftOrRight(particles[0]);
+			System.out.println("Hey there, my direction is: " + direction.value);
+			this.centerWithCam(direction, 1);
 			System.out.println("Array Length: " + particles.length);
-			for (int i = 0; i < particles.length; i ++){
-				System.out.println("Particle number " + i + " center x mass: " + particles[i].center_mass_x);
-				System.out.println("Particle number " + i + " center y mass: " + particles[i].center_mass_y);
-				System.out.println(" ");
-			}
-			hasTakenPic = false;
+
+				System.out.println("Particle number " + 0 + " center x mass: " + particles[0].center_mass_x);
+
+
+		} else {
+			System.out.println("There are no particles on the screen of the desired type.");
 		}
+
 
 		station.updateLCD();
 	}
@@ -110,7 +69,6 @@ public class RobotTemplate extends IterativeRobot {
 	/**
 	 * This function is called periodically during operator control
 	 */
-
 	public void teleopPeriodic() {
 
 		ParticleAnalysisReport[] orderedParticles;
@@ -124,17 +82,32 @@ public class RobotTemplate extends IterativeRobot {
 
 
 			Direction nextDirection = cam.leftOrRight(orderedParticles[0]);
+			this.centerWithCam(nextDirection, 2);
 
-			if (nextDirection == Direction.left) {
-				rightSide.set(0.2);	
+		}
+
+	}
+
+	public void disabledPeriodic() {
+		cam.relay.set(Relay.Value.kOff);
+	}
+
+	public void centerWithCam(Direction direction, int mode) {
+		if (direction == Direction.left) {
+			station.println(DriverStationLCD.Line.kUser1, 1, "left  ");
+			if (mode == 1) {
+				rightSide.set(0.2);
 				try {
 					Thread.sleep(sleepForMili);
 				} catch (InterruptedException ex) {
 					ex.printStackTrace();
 				}
 				rightSide.set(0);
+			}
 
-			} else if (nextDirection == Direction.right) {
+		} else if (direction == Direction.right) {
+			station.println(DriverStationLCD.Line.kUser1, 1, "right  ");
+			if (mode == 1) {
 				leftSide.set(0.2);
 				try {
 					Thread.sleep(sleepForMili);
@@ -142,25 +115,18 @@ public class RobotTemplate extends IterativeRobot {
 					ex.printStackTrace();
 				}
 				leftSide.set(0);
-				
-			} else if (nextDirection == Direction.center) {
+			}
+
+		} else if (direction == Direction.center) {
+			station.println(DriverStationLCD.Line.kUser1, 1, "center");
+			if (mode == 1) {
 				leftSide.set(0);
 				rightSide.set(0);
-				
 			}
-			station.updateLCD();
 		}
-
-		orderedParticles = null;
+		station.updateLCD();
 	}
-
-	public void disabledPeriodic() {
-		cam.relay.set(Relay.Value.kOff);
-	}
-
 	/**
 	 * This function is called periodically during test mode
 	 */
-
-
 }
